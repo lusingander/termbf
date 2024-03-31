@@ -1,5 +1,7 @@
 # termbf
 
+Terminal Brainf\*ck visualizer
+
 ## Brainf\*ck interpreter specification
 
 - EOF returns 0

@@ -34,9 +34,16 @@ impl Interpreter {
         &self.output
     }
 
-    pub fn current_line_and_pos(&self) -> (usize, usize) {
-        let t = self.current_token();
-        (t.line, t.pos)
+    pub fn memory(&self) -> &Vec<u8> {
+        &self.memory
+    }
+
+    pub fn current_ptr(&self) -> u8 {
+        self.ptr
+    }
+
+    pub fn current_line_and_pos(&self) -> Option<(usize, usize)> {
+        self.current_token().map(|t| (t.line, t.pos))
     }
 
     pub fn end(&self) -> bool {
@@ -44,61 +51,62 @@ impl Interpreter {
     }
 
     pub fn step(&mut self) {
-        let token = self.current_token();
-        match token.tp {
-            TokenType::Plus => {
-                let v = self.current_value();
-                *v = v.checked_add(1).unwrap();
-                self.cur += 1;
-            }
-            TokenType::Minus => {
-                let v = self.current_value();
-                *v = v.checked_sub(1).unwrap();
-                self.cur += 1;
-            }
-            TokenType::RightAngle => {
-                self.ptr = self.ptr.checked_add(1).unwrap();
-                self.cur += 1;
-            }
-            TokenType::LeftAngle => {
-                self.ptr = self.ptr.checked_sub(1).unwrap();
-                self.cur += 1;
-            }
-            TokenType::LeftSquare => {
-                let v = self.current_value();
-                if *v == 0 {
-                    self.cur = self.jump_idx(&token);
-                } else {
+        if let Some(token) = self.current_token() {
+            match token.tp {
+                TokenType::Plus => {
+                    let v = self.current_value();
+                    *v = v.checked_add(1).unwrap();
                     self.cur += 1;
                 }
-            }
-            TokenType::RightSquare => {
-                let v = self.current_value();
-                if *v != 0 {
-                    self.cur = self.jump_idx(&token);
-                } else {
+                TokenType::Minus => {
+                    let v = self.current_value();
+                    *v = v.checked_sub(1).unwrap();
                     self.cur += 1;
                 }
-            }
-            TokenType::Dot => {
-                let v = self.current_value();
-                let c = *v as char;
-                self.output.push(c);
-                self.cur += 1;
-            }
-            TokenType::Comma => {
-                let mut cs = self.input.chars();
-                let c = cs.next().unwrap_or(0 as char); // EOF: 0
-                self.input = cs.collect();
-                let v = self.current_value();
-                *v = c as u8;
-                self.cur += 1;
+                TokenType::RightAngle => {
+                    self.ptr = self.ptr.checked_add(1).unwrap();
+                    self.cur += 1;
+                }
+                TokenType::LeftAngle => {
+                    self.ptr = self.ptr.checked_sub(1).unwrap();
+                    self.cur += 1;
+                }
+                TokenType::LeftSquare => {
+                    let v = self.current_value();
+                    if *v == 0 {
+                        self.cur = self.jump_idx(&token);
+                    } else {
+                        self.cur += 1;
+                    }
+                }
+                TokenType::RightSquare => {
+                    let v = self.current_value();
+                    if *v != 0 {
+                        self.cur = self.jump_idx(&token);
+                    } else {
+                        self.cur += 1;
+                    }
+                }
+                TokenType::Dot => {
+                    let v = self.current_value();
+                    let c = *v as char;
+                    self.output.push(c);
+                    self.cur += 1;
+                }
+                TokenType::Comma => {
+                    let mut cs = self.input.chars();
+                    let c = cs.next().unwrap_or(0 as char); // EOF: 0
+                    self.input = cs.collect();
+                    let v = self.current_value();
+                    *v = c as u8;
+                    self.cur += 1;
+                }
             }
         }
     }
 
-    fn current_token(&self) -> Token {
-        *self.tokens.get(self.cur).unwrap()
+    fn current_token(&self) -> Option<Token> {
+        self.tokens.get(self.cur).copied()
     }
 
     fn current_value(&mut self) -> &mut u8 {

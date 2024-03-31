@@ -4,3 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+crossterm = "0.27.0"
+itsuki = "0.1.0"
+ratatui = { version = "0.26.1", features = [
+    "all-widgets",
+    "unstable-widget-ref",
+] }
