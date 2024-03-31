@@ -32,11 +32,7 @@ pub fn render(f: &mut Frame, app: &App) {
 }
 
 fn render_header(f: &mut Frame, area: Rect) {
-    let header = Paragraph::new("termbf").centered().block(
-        Block::default()
-            .borders(Borders::NONE)
-            .style(Style::default().fg(APP_COLOR).add_modifier(Modifier::BOLD)),
-    );
+    let header = build_header("termbf");
     f.render_widget(header, area);
 }
 
@@ -53,60 +49,19 @@ fn render_outputs(f: &mut Frame, area: Rect, app: &App) {
     .split(area);
 
     let source = source_text(app);
-    let source_area = Paragraph::new(source)
-        .style(get_content_base_style(app, SelectItem::Source))
-        .wrap(Wrap { trim: false })
-        .block(
-            Block::bordered()
-                .title("Source")
-                .padding(Padding::horizontal(1))
-                .style(get_block_style(app, SelectItem::Source)),
-        );
+    let source_area = build_textarea(app, "Source", source, SelectItem::Source);
     f.render_widget(source_area, chunks[0]);
 
     let input = app.interpreter.input();
-    let input_area = Paragraph::new(input)
-        .style(get_content_base_style(app, SelectItem::Input))
-        .wrap(Wrap { trim: false })
-        .block(
-            Block::bordered()
-                .title("Input")
-                .padding(Padding::horizontal(1))
-                .style(get_block_style(app, SelectItem::Input)),
-        );
+    let input_area = build_textarea(app, "Input", input, SelectItem::Input);
     f.render_widget(input_area, chunks[1]);
 
     let mem = app.interpreter.memory();
-    let cur_ptr = if app.state == State::Stop {
-        None
-    } else {
-        Some(app.interpreter.current_ptr())
-    };
-    let memory = Memory::new(mem, cur_ptr)
-        .style(get_content_base_style(app, SelectItem::Memory))
-        .ptr_style(
-            Style::default()
-                .fg(APP_COLOR)
-                .add_modifier(Modifier::UNDERLINED),
-        )
-        .block(
-            Block::bordered()
-                .title("Memory")
-                .padding(Padding::horizontal(1))
-                .style(get_block_style(app, SelectItem::Memory)),
-        );
+    let memory = build_memory(app, "Memory", mem, SelectItem::Memory);
     f.render_widget(memory, chunks[2]);
 
     let output = app.interpreter.output();
-    let output_area = Paragraph::new(output)
-        .style(get_content_base_style(app, SelectItem::Output))
-        .wrap(Wrap { trim: false })
-        .block(
-            Block::bordered()
-                .title("Output")
-                .padding(Padding::horizontal(1))
-                .style(get_block_style(app, SelectItem::Output)),
-        );
+    let output_area = build_textarea(app, "Output", output, SelectItem::Output);
     f.render_widget(output_area, chunks[3]);
 }
 
@@ -123,49 +78,25 @@ fn render_controls(f: &mut Frame, area: Rect, app: &App) {
     )
     .split(area);
 
-    let reset_button = Paragraph::new("Reset")
-        .style(get_content_base_style(app, SelectItem::Reset))
-        .block(
-            Block::bordered()
-                .border_type(BorderType::Rounded)
-                .padding(Padding::horizontal(1))
-                .style(get_block_style(app, SelectItem::Reset)),
-        );
+    let reset_button = build_button(app, "Reset", SelectItem::Reset);
     f.render_widget(reset_button, chunks[0]);
 
-    let start_button = Paragraph::new("Start")
-        .style(get_content_base_style(app, SelectItem::Start))
-        .block(
-            Block::bordered()
-                .border_type(BorderType::Rounded)
-                .padding(Padding::horizontal(1))
-                .style(get_block_style(app, SelectItem::Start)),
-        );
+    let start_button = build_button(app, "Start", SelectItem::Start);
     f.render_widget(start_button, chunks[1]);
 
-    let pause_button = Paragraph::new("Pause")
-        .style(get_content_base_style(app, SelectItem::Pause))
-        .block(
-            Block::bordered()
-                .border_type(BorderType::Rounded)
-                .padding(Padding::horizontal(1))
-                .style(get_block_style(app, SelectItem::Pause)),
-        );
+    let pause_button = build_button(app, "Pause", SelectItem::Pause);
     f.render_widget(pause_button, chunks[2]);
 
-    let step_button = Paragraph::new("Step")
-        .style(get_content_base_style(app, SelectItem::Step))
-        .block(
-            Block::bordered()
-                .border_type(BorderType::Rounded)
-                .padding(Padding::horizontal(1))
-                .style(get_block_style(app, SelectItem::Step)),
-        );
+    let step_button = build_button(app, "Step", SelectItem::Step);
     f.render_widget(step_button, chunks[3]);
 }
 
 fn source_text(app: &App) -> Text {
-    let base_style = Style::default().fg(DEFAULT_COLOR);
+    let base_style = if app.selected == SelectItem::Source {
+        Style::default().fg(DEFAULT_COLOR)
+    } else {
+        Style::default().fg(DISABLED_COLOR)
+    };
     let cur_lp = app.interpreter.current_line_and_pos();
 
     if app.state == State::Stop || cur_lp.is_none() {
@@ -198,6 +129,71 @@ fn source_text(app: &App) -> Text {
     Text::from(lines)
 }
 
+fn build_header(label: &str) -> Paragraph {
+    Paragraph::new(label).centered().block(
+        Block::default()
+            .borders(Borders::NONE)
+            .style(Style::default().fg(APP_COLOR).add_modifier(Modifier::BOLD)),
+    )
+}
+
+fn build_textarea<'a, T>(
+    app: &'a App,
+    label: &'a str,
+    content: T,
+    item: SelectItem,
+) -> Paragraph<'a>
+where
+    T: Into<Text<'a>>,
+{
+    Paragraph::new(content)
+        .style(get_content_base_style(app, item))
+        .wrap(Wrap { trim: false })
+        .block(
+            Block::bordered()
+                .title(label)
+                .padding(Padding::horizontal(1))
+                .style(get_block_style(app, item)),
+        )
+}
+
+fn build_memory<'a>(
+    app: &'a App,
+    label: &'a str,
+    mem: &'a Vec<u8>,
+    item: SelectItem,
+) -> Memory<'a> {
+    let cur_ptr = if app.state == State::Stop {
+        None
+    } else {
+        Some(app.interpreter.current_ptr())
+    };
+    Memory::new(mem, cur_ptr)
+        .style(get_content_base_style(app, item))
+        .ptr_style(
+            Style::default()
+                .fg(APP_COLOR)
+                .add_modifier(Modifier::UNDERLINED),
+        )
+        .block(
+            Block::bordered()
+                .title(label)
+                .padding(Padding::horizontal(1))
+                .style(get_block_style(app, item)),
+        )
+}
+
+fn build_button<'a>(app: &'a App, label: &'a str, item: SelectItem) -> Paragraph<'a> {
+    Paragraph::new(label)
+        .style(get_style_base(app, item, APP_COLOR))
+        .block(
+            Block::bordered()
+                .border_type(BorderType::Rounded)
+                .padding(Padding::horizontal(1))
+                .style(get_block_style(app, item)),
+        )
+}
+
 fn get_content_base_style(app: &App, item: SelectItem) -> Style {
     get_style_base(app, item, DEFAULT_COLOR)
 }
@@ -212,7 +208,7 @@ fn get_style_base(app: &App, item: SelectItem, selected_color: Color) -> Style {
             if app.selected == item {
                 Style::default().fg(selected_color)
             } else {
-                Style::default().fg(DEFAULT_COLOR)
+                Style::default().fg(DISABLED_COLOR)
             }
         }
         State::Play | State::AutoPlay | State::Pause => {
