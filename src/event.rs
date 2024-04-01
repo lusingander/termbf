@@ -1,6 +1,11 @@
-use std::{sync::mpsc, thread, time::Duration};
+use std::{
+    sync::{mpsc, Arc, RwLock},
+    thread,
+};
 
 use crossterm::event::{Event, KeyEvent};
+
+use crate::app::Speed;
 
 pub enum AppEvent {
     Key(KeyEvent),
@@ -8,7 +13,7 @@ pub enum AppEvent {
     Tick,
 }
 
-pub fn new() -> (mpsc::Sender<AppEvent>, mpsc::Receiver<AppEvent>) {
+pub fn new(speed: Arc<RwLock<Speed>>) -> (mpsc::Sender<AppEvent>, mpsc::Receiver<AppEvent>) {
     let (tx, rx) = mpsc::channel();
 
     let event_tx = tx.clone();
@@ -26,7 +31,11 @@ pub fn new() -> (mpsc::Sender<AppEvent>, mpsc::Receiver<AppEvent>) {
 
     let tick_tx = tx.clone();
     thread::spawn(move || loop {
-        thread::sleep(Duration::from_millis(100));
+        let d = {
+            let s = speed.read().unwrap();
+            s.sleep_duration()
+        };
+        thread::sleep(d);
         tick_tx.send(AppEvent::Tick).unwrap();
     });
 

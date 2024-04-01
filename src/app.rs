@@ -1,4 +1,7 @@
-use std::sync::mpsc;
+use std::{
+    sync::{mpsc, Arc, RwLock},
+    time::Duration,
+};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use itsuki::zero_indexed_enum;
@@ -24,7 +27,30 @@ zero_indexed_enum! {
         Start,
         Pause,
         Step,
+        Speed,
     ]
+}
+
+zero_indexed_enum! {
+    Speed => [
+        VerySlow,
+        Slow,
+        Normal,
+        Fast,
+        VeryFast,
+    ]
+}
+
+impl Speed {
+    pub fn sleep_duration(&self) -> Duration {
+        match self {
+            Speed::VerySlow => Duration::from_millis(500),
+            Speed::Slow => Duration::from_millis(200),
+            Speed::Normal => Duration::from_millis(100),
+            Speed::Fast => Duration::from_millis(50),
+            Speed::VeryFast => Duration::from_millis(20),
+        }
+    }
 }
 
 pub struct App {
@@ -33,11 +59,12 @@ pub struct App {
     pub source: String,
     pub input: String,
     pub interpreter: Interpreter,
+    pub speed: Arc<RwLock<Speed>>,
     quit: bool,
 }
 
 impl App {
-    pub fn new() -> App {
+    pub fn new(speed: Arc<RwLock<Speed>>) -> App {
         // fixme
         let source = String::from("++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.");
         let input = String::new();
@@ -50,6 +77,7 @@ impl App {
             source,
             input,
             interpreter,
+            speed,
             quit: false,
         }
     }
@@ -116,6 +144,10 @@ impl App {
                         }
                         self.state = State::Play;
                     }
+                }
+                (_, SelectItem::Speed) => {
+                    let mut s = self.speed.write().unwrap();
+                    *s = s.next();
                 }
                 _ => {}
             },

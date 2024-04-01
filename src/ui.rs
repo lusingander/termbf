@@ -7,7 +7,7 @@ use ratatui::{
 };
 
 use crate::{
-    app::{App, SelectItem, State},
+    app::{App, SelectItem, Speed, State},
     widget::memory::Memory,
 };
 
@@ -73,6 +73,7 @@ fn render_controls(f: &mut Frame, area: Rect, app: &App) {
             Constraint::Length(9),
             Constraint::Length(9),
             Constraint::Length(8),
+            Constraint::Length(18),
             Constraint::Min(0),
         ],
     )
@@ -89,6 +90,9 @@ fn render_controls(f: &mut Frame, area: Rect, app: &App) {
 
     let step_button = build_button(app, "Step", SelectItem::Step);
     f.render_widget(step_button, chunks[3]);
+
+    let speed_select = build_speed_select(app, SelectItem::Speed);
+    f.render_widget(speed_select, chunks[4]);
 }
 
 fn source_text(app: &App) -> Text {
@@ -190,6 +194,27 @@ fn build_button<'a>(app: &'a App, label: &'a str, item: SelectItem) -> Paragraph
             Block::bordered()
                 .border_type(BorderType::Rounded)
                 .padding(Padding::horizontal(1))
+                .style(get_block_style(app, item)),
+        )
+}
+
+fn build_speed_select(app: &App, item: SelectItem) -> Paragraph {
+    let label = {
+        let s = app.speed.read().unwrap();
+        match *s {
+            Speed::VerySlow => "Speed: Very Slow",
+            Speed::Slow => "Speed: Slow",
+            Speed::Normal => "Speed: Normal",
+            Speed::Fast => "Speed: Fast",
+            Speed::VeryFast => "Speed: Very Fast",
+        }
+    };
+    Paragraph::new(label)
+        .style(get_style_base(app, item, APP_COLOR))
+        .block(
+            Block::default()
+                .borders(Borders::NONE)
+                .padding(Padding::symmetric(1, 1))
                 .style(get_block_style(app, item)),
         )
 }

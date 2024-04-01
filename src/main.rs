@@ -8,8 +8,10 @@ mod widget;
 use std::{
     io::{stdout, Stdout},
     panic,
+    sync::{Arc, RwLock},
 };
 
+use app::Speed;
 use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -43,8 +45,9 @@ fn initialize_panic_handler() {
 }
 
 fn run<B: Backend>(terminal: &mut Terminal<B>) -> std::io::Result<()> {
-    let (_, rx) = event::new();
-    App::new().start(terminal, rx)
+    let speed = Arc::new(RwLock::new(Speed::Normal));
+    let (_, rx) = event::new(speed.clone());
+    App::new(speed).start(terminal, rx)
 }
 
 fn main() -> std::io::Result<()> {
