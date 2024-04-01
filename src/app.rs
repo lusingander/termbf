@@ -3,9 +3,10 @@ use std::{
     time::Duration,
 };
 
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 use itsuki::zero_indexed_enum;
 use ratatui::{backend::Backend, Terminal};
+use tui_input::{backend::crossterm::EventHandler, Input};
 
 use crate::{event::AppEvent, interpreter::Interpreter, key_code, key_code_char, ui};
 
@@ -15,6 +16,12 @@ pub enum State {
     Play,
     AutoPlay,
     Pause,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EditState {
+    None,
+    EditInput,
 }
 
 zero_indexed_enum! {
@@ -55,9 +62,10 @@ impl Speed {
 
 pub struct App {
     pub state: State,
+    pub edit_state: EditState,
     pub selected: SelectItem,
     pub source: String,
-    pub input: String,
+    pub input_input: Input,
     pub interpreter: Interpreter,
     pub speed: Arc<RwLock<Speed>>,
     quit: bool,
@@ -66,16 +74,16 @@ pub struct App {
 impl App {
     pub fn new(speed: Arc<RwLock<Speed>>) -> App {
         // fixme
-        let source = String::from("++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.");
-        let input = String::new();
-        // let source = String::from(",[.,]");
-        // let input = String::from("Hello, termbf!");
-        let interpreter = Interpreter::new(&source, &input);
+        // let source = String::from("++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.");
+        let source = String::from(",[.,]");
+        let input_input = Input::default();
+        let interpreter = Interpreter::new(&source, input_input.value());
         App {
             state: State::Stop,
+            edit_state: EditState::None,
             selected: SelectItem::Source,
             source,
-            input,
+            input_input,
             interpreter,
             speed,
             quit: false,
@@ -106,6 +114,23 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key: KeyEvent) {
+        if self.edit_state == EditState::EditInput {
+            match key {
+                key_code_char!('c', Ctrl) => {
+                    self.quit = true;
+                }
+                key_code!(KeyCode::Esc) => {
+                    self.edit_state = EditState::None;
+                    self.interpreter
+                        .set_input(self.input_input.value().to_owned());
+                }
+                _ => {
+                    self.input_input.handle_event(&Event::Key(key));
+                }
+            }
+            return;
+        }
+
         match key {
             key_code!(KeyCode::Esc) | key_code_char!('c', Ctrl) => {
                 self.quit = true;
@@ -115,6 +140,13 @@ impl App {
             }
             key_code_char!('k') | key_code_char!('h') => {
                 self.selected = self.selected.prev();
+            }
+            key_code_char!('e') => {
+                if let (State::Stop, SelectItem::Input) = (self.state, self.selected) {
+                    self.edit_state = EditState::EditInput;
+                    self.state = State::Stop;
+                    self.reset_interpreter();
+                }
             }
             key_code!(KeyCode::Enter) => match (self.state, self.selected) {
                 (_, SelectItem::Reset) => {
@@ -168,6 +200,6 @@ impl App {
     }
 
     fn reset_interpreter(&mut self) {
-        self.interpreter = Interpreter::new(&self.source, &self.input)
+        self.interpreter = Interpreter::new(&self.source, self.input_input.value())
     }
 }

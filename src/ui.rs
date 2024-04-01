@@ -7,7 +7,7 @@ use ratatui::{
 };
 
 use crate::{
-    app::{App, SelectItem, Speed, State},
+    app::{App, EditState, SelectItem, Speed, State},
     widget::memory::Memory,
 };
 
@@ -52,9 +52,10 @@ fn render_outputs(f: &mut Frame, area: Rect, app: &App) {
     let source_area = build_textarea(app, "Source", source, SelectItem::Source);
     f.render_widget(source_area, chunks[0]);
 
-    let input = app.interpreter.input();
+    let input = get_input_content(app);
     let input_area = build_textarea(app, "Input", input, SelectItem::Input);
     f.render_widget(input_area, chunks[1]);
+    set_input_cursor(f, app, chunks[1]);
 
     let mem = app.interpreter.memory();
     let memory = build_memory(app, "Memory", mem, SelectItem::Memory);
@@ -131,6 +132,23 @@ fn source_text(app: &App) -> Text {
         })
         .collect();
     Text::from(lines)
+}
+
+fn get_input_content(app: &App) -> &str {
+    if app.interpreter.running() {
+        app.interpreter.input()
+    } else {
+        app.input_input.value()
+    }
+}
+
+fn set_input_cursor(f: &mut Frame, app: &App, area: Rect) {
+    if app.edit_state == EditState::EditInput {
+        let visual_cursor = app.input_input.visual_cursor() as u16;
+        let cursor_x = area.x + 2 /* border + padding */ + visual_cursor;
+        let cursor_y = area.y + 1 /* border */;
+        f.set_cursor(cursor_x, cursor_y);
+    }
 }
 
 fn build_header(label: &str) -> Paragraph {

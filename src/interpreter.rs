@@ -30,6 +30,10 @@ impl Interpreter {
         &self.input
     }
 
+    pub fn set_input(&mut self, input: String) {
+        self.input = input;
+    }
+
     pub fn output(&self) -> &str {
         &self.output
     }
@@ -48,6 +52,10 @@ impl Interpreter {
 
     pub fn end(&self) -> bool {
         self.cur >= self.tokens.len()
+    }
+
+    pub fn running(&self) -> bool {
+        self.cur > 0
     }
 
     pub fn step(&mut self) {

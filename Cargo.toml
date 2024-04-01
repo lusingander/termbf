@@ -10,3 +10,4 @@ ratatui = { version = "0.26.1", features = [
     "all-widgets",
     "unstable-widget-ref",
 ] }
+tui-input = "0.8.0"
