@@ -72,10 +72,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(speed: Arc<RwLock<Speed>>) -> App {
-        // fixme
-        // let source = String::from("++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.");
-        let source = String::from(",[.,]");
+    pub fn new(source: String, speed: Arc<RwLock<Speed>>) -> App {
         let input_input = Input::default();
         let interpreter = Interpreter::new(&source, input_input.value());
         App {
