@@ -1,5 +1,5 @@
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
     widgets::{Block, BorderType, Borders, Padding, Paragraph, Wrap},
@@ -16,18 +16,16 @@ const DEFAULT_COLOR: Color = Color::Reset;
 const DISABLED_COLOR: Color = Color::DarkGray;
 
 pub fn render(f: &mut Frame, app: &App) {
+    use Constraint::*;
     let debug_area_length = if app.debug { 1 } else { 0 };
-    let chunks = Layout::new(
-        Direction::Vertical,
-        vec![
-            Constraint::Length(1),
-            Constraint::Min(0),
-            Constraint::Length(3),
-            Constraint::Length(2),
-            Constraint::Length(debug_area_length),
-        ],
-    )
-    .split(f.size());
+    let constraints = vec![
+        Length(1),
+        Min(0),
+        Length(3),
+        Length(2),
+        Length(debug_area_length),
+    ];
+    let chunks = Layout::vertical(constraints).split(f.size());
 
     render_header(f, chunks[0]);
     render_outputs(f, chunks[1], app);
@@ -42,16 +40,9 @@ fn render_header(f: &mut Frame, area: Rect) {
 }
 
 fn render_outputs(f: &mut Frame, area: Rect, app: &App) {
-    let chunks = Layout::new(
-        Direction::Vertical,
-        vec![
-            Constraint::Min(3),
-            Constraint::Length(3),
-            Constraint::Length(3),
-            Constraint::Length(3),
-        ],
-    )
-    .split(area);
+    use Constraint::*;
+    let constraints = vec![Min(3), Length(3), Length(3), Length(3)];
+    let chunks = Layout::vertical(constraints).split(area);
 
     let source = source_text(app);
     let source_area = build_textarea(app, "Source", source, SelectItem::Source);
@@ -72,33 +63,54 @@ fn render_outputs(f: &mut Frame, area: Rect, app: &App) {
 }
 
 fn render_controls(f: &mut Frame, area: Rect, app: &App) {
-    let chunks = Layout::new(
-        Direction::Horizontal,
-        vec![
-            Constraint::Length(9),
-            Constraint::Length(9),
-            Constraint::Length(9),
-            Constraint::Length(8),
-            Constraint::Length(18),
-            Constraint::Min(0),
-        ],
-    )
-    .split(area);
+    use Constraint::*;
+    let (reset_area, start_area, pause_area, step_area, speed_area) = match app.state {
+        State::Default => {
+            let constraints = vec![Min(0), Length(9), Length(8), Length(18), Min(0)];
+            let cs = Layout::horizontal(constraints).split(area);
+            (None, Some(cs[1]), None, Some(cs[2]), Some(cs[3]))
+        }
+        State::Stop => {
+            let constraints = vec![Min(0), Length(9), Min(0)];
+            let cs = Layout::horizontal(constraints).split(area);
+            (Some(cs[1]), None, None, None, None)
+        }
+        State::Play => {
+            let constraints = vec![Min(0), Length(9), Length(9), Length(8), Length(18), Min(0)];
+            let cs = Layout::horizontal(constraints).split(area);
+            (Some(cs[1]), Some(cs[2]), None, Some(cs[3]), Some(cs[4]))
+        }
+        State::AutoPlay => {
+            let constraints = vec![Min(0), Length(9), Length(9), Length(8), Length(18), Min(0)];
+            let cs = Layout::horizontal(constraints).split(area);
+            (Some(cs[1]), None, Some(cs[2]), Some(cs[3]), Some(cs[4]))
+        }
+    };
 
-    let reset_button = build_button(app, "Reset", SelectItem::Reset);
-    f.render_widget(reset_button, chunks[0]);
+    if let Some(area) = reset_area {
+        let reset_button = build_button(app, "Reset", SelectItem::Reset);
+        f.render_widget(reset_button, area);
+    }
 
-    let start_button = build_button(app, "Start", SelectItem::Start);
-    f.render_widget(start_button, chunks[1]);
+    if let Some(area) = start_area {
+        let start_button = build_button(app, "Start", SelectItem::Start);
+        f.render_widget(start_button, area);
+    }
 
-    let pause_button = build_button(app, "Pause", SelectItem::Pause);
-    f.render_widget(pause_button, chunks[2]);
+    if let Some(area) = pause_area {
+        let pause_button = build_button(app, "Pause", SelectItem::Pause);
+        f.render_widget(pause_button, area);
+    }
 
-    let step_button = build_button(app, "Step", SelectItem::Step);
-    f.render_widget(step_button, chunks[3]);
+    if let Some(area) = step_area {
+        let step_button = build_button(app, "Step", SelectItem::Step);
+        f.render_widget(step_button, area);
+    }
 
-    let speed_select = build_speed_select(app, SelectItem::Speed);
-    f.render_widget(speed_select, chunks[4]);
+    if let Some(area) = speed_area {
+        let speed_select = build_speed_select(app, SelectItem::Speed);
+        f.render_widget(speed_select, area);
+    }
 }
 
 fn render_help(f: &mut Frame, area: Rect, app: &App) {

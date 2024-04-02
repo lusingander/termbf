@@ -38,6 +38,18 @@ zero_indexed_enum! {
     ]
 }
 
+impl SelectItem {
+    fn not_allowed_items(state: State) -> &'static [SelectItem] {
+        use SelectItem::*;
+        match state {
+            State::Default => &[Reset, Pause],
+            State::Stop => &[Start, Pause, Step, Speed],
+            State::Play => &[Pause],
+            State::AutoPlay => &[Start],
+        }
+    }
+}
+
 zero_indexed_enum! {
     Speed => [
         VerySlow,
@@ -139,9 +151,17 @@ impl App {
             }
             key_code!(KeyCode::Tab) => {
                 self.selected = self.selected.next();
+                let not_allowed = SelectItem::not_allowed_items(self.state);
+                while not_allowed.contains(&self.selected) {
+                    self.selected = self.selected.next();
+                }
             }
             key_code!(KeyCode::BackTab) => {
                 self.selected = self.selected.prev();
+                let not_allowed = SelectItem::not_allowed_items(self.state);
+                while not_allowed.contains(&self.selected) {
+                    self.selected = self.selected.prev();
+                }
             }
             key_code_char!('j') => match self.selected {
                 SelectItem::Source => {
@@ -176,21 +196,25 @@ impl App {
             key_code!(KeyCode::Enter) => match (self.state, self.selected) {
                 (_, SelectItem::Reset) => {
                     self.state = State::Default;
+                    self.selected = SelectItem::Start;
                     self.reset_interpreter();
                 }
                 (_, SelectItem::Start) => {
                     if !self.interpreter.end() {
                         self.state = State::AutoPlay;
+                        self.selected = SelectItem::Pause;
                     }
                 }
                 (_, SelectItem::Pause) => {
                     if !self.interpreter.end() {
                         self.state = State::Play;
+                        self.selected = SelectItem::Start;
                     }
                 }
                 (_, SelectItem::Step) => {
                     if self.interpreter.end() {
                         self.state = State::Stop;
+                        self.selected = SelectItem::Reset;
                     } else {
                         self.interpreter.step();
                         self.state = State::Play;
@@ -205,9 +229,13 @@ impl App {
     fn handle_resize(&mut self, _w: u16, _h: u16) {}
 
     fn handle_tick(&mut self) {
+        use SelectItem::*;
         if self.state == State::AutoPlay {
             if self.interpreter.end() {
                 self.state = State::Stop;
+                if let Start | Pause | Step | Speed = self.selected {
+                    self.selected = Reset;
+                }
             } else {
                 self.interpreter.step();
             }
