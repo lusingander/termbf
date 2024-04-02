@@ -15,7 +15,6 @@ pub enum State {
     Stop,
     Play,
     AutoPlay,
-    Pause,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -69,11 +68,12 @@ pub struct App {
     pub input_input: Input,
     pub interpreter: Interpreter,
     pub speed: Arc<RwLock<Speed>>,
+    pub debug: bool,
     quit: bool,
 }
 
 impl App {
-    pub fn new(source: String, speed: Arc<RwLock<Speed>>) -> App {
+    pub fn new(source: String, speed: Arc<RwLock<Speed>>, debug: bool) -> App {
         let input_input = Input::default();
         let interpreter = Interpreter::new(&source, input_input.value());
         let source = source.lines().map(|s| s.to_string()).collect();
@@ -86,6 +86,7 @@ impl App {
             input_input,
             interpreter,
             speed,
+            debug,
             quit: false,
         }
     }
@@ -167,9 +168,11 @@ impl App {
             },
             key_code_char!('e') => {
                 if let (State::Stop, SelectItem::Input) = (self.state, self.selected) {
-                    self.edit_state = EditState::EditInput;
-                    self.state = State::Stop;
-                    self.reset_interpreter();
+                    if !self.interpreter.end() {
+                        self.edit_state = EditState::EditInput;
+                        self.state = State::Stop;
+                        self.reset_interpreter();
+                    }
                 }
             }
             key_code!(KeyCode::Enter) => match (self.state, self.selected) {
@@ -188,7 +191,7 @@ impl App {
                     if self.interpreter.end() {
                         self.state = State::Stop;
                     } else {
-                        self.state = State::Pause;
+                        self.state = State::Play;
                     }
                 }
                 (_, SelectItem::Step) => {

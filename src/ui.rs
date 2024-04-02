@@ -16,12 +16,15 @@ const DEFAULT_COLOR: Color = Color::Reset;
 const DISABLED_COLOR: Color = Color::DarkGray;
 
 pub fn render(f: &mut Frame, app: &App) {
+    let debug_area_length = if app.debug { 1 } else { 0 };
     let chunks = Layout::new(
         Direction::Vertical,
         vec![
             Constraint::Length(1),
             Constraint::Min(0),
             Constraint::Length(3),
+            Constraint::Length(2),
+            Constraint::Length(debug_area_length),
         ],
     )
     .split(f.size());
@@ -29,6 +32,8 @@ pub fn render(f: &mut Frame, app: &App) {
     render_header(f, chunks[0]);
     render_outputs(f, chunks[1], app);
     render_controls(f, chunks[2], app);
+    render_help(f, chunks[3], app);
+    render_debug_info(f, chunks[4], app);
 }
 
 fn render_header(f: &mut Frame, area: Rect) {
@@ -94,6 +99,18 @@ fn render_controls(f: &mut Frame, area: Rect, app: &App) {
 
     let speed_select = build_speed_select(app, SelectItem::Speed);
     f.render_widget(speed_select, chunks[4]);
+}
+
+fn render_help(f: &mut Frame, area: Rect, app: &App) {
+    let help = build_help(app);
+    f.render_widget(help, area);
+}
+
+fn render_debug_info(f: &mut Frame, area: Rect, app: &App) {
+    if app.debug {
+        let debug_info = build_debug_info(app);
+        f.render_widget(debug_info, area);
+    }
 }
 
 fn source_text(app: &App) -> Text {
@@ -278,7 +295,7 @@ fn get_style_base(app: &App, item: SelectItem, selected_color: Color) -> Style {
                 Style::default().fg(DISABLED_COLOR)
             }
         }
-        State::Play | State::AutoPlay | State::Pause => {
+        State::Play | State::AutoPlay => {
             if app.selected == item {
                 Style::default().fg(selected_color)
             } else {
@@ -286,4 +303,71 @@ fn get_style_base(app: &App, item: SelectItem, selected_color: Color) -> Style {
             }
         }
     }
+}
+
+fn build_help(app: &App) -> Paragraph {
+    let help = match app.selected {
+        SelectItem::Source => "<Esc> quit app, <Tab/BackTab> next/prev, <j/k> scroll",
+        SelectItem::Input => {
+            if app.edit_state == EditState::EditInput {
+                "<Esc> exit editing"
+            } else if app.state != State::Stop || app.interpreter.end() {
+                "<Esc> quit app, <Tab/BackTab> next/prev"
+            } else {
+                "<Esc> quit app, <Tab/BackTab> next/prev, <e> enter editing"
+            }
+        }
+        SelectItem::Memory => "<Esc> quit app, <Tab/BackTab> next/prev",
+        SelectItem::Output => "<Esc> quit app, <Tab/BackTab> next/prev",
+        SelectItem::Reset => {
+            if app.state != State::Stop || app.interpreter.end() {
+                "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> reset"
+            } else {
+                "<Esc> quit app, <Tab/BackTab> next/prev"
+            }
+        }
+        SelectItem::Start => {
+            if app.state == State::AutoPlay || app.interpreter.end() {
+                "<Esc> quit app, <Tab/BackTab> next/prev"
+            } else {
+                "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> start"
+            }
+        }
+        SelectItem::Pause => {
+            if app.state == State::AutoPlay {
+                "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> pause"
+            } else {
+                "<Esc> quit app, <Tab/BackTab> next/prev"
+            }
+        }
+        SelectItem::Step => {
+            if app.interpreter.end() {
+                "<Esc> quit app, <Tab/BackTab> next/prev"
+            } else {
+                "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> step"
+            }
+        }
+        SelectItem::Speed => "<Esc> quit app, <Tab/BackTab> next/prev, <j/k> select",
+    };
+    Paragraph::new(help)
+        .style(Style::default().fg(DISABLED_COLOR))
+        .block(
+            Block::default()
+                .borders(Borders::TOP)
+                .padding(Padding::horizontal(1)),
+        )
+}
+
+fn build_debug_info(app: &App) -> Paragraph {
+    let i = &app.interpreter;
+    let debug = format!(
+        "pos = {:?}, ptr = {:?}, total_step = {:?}, state = {:?}",
+        i.current_line_and_pos(),
+        i.current_ptr(),
+        i.total_step_count(),
+        app.state,
+    );
+    Paragraph::new(debug)
+        .style(Style::default().fg(DISABLED_COLOR))
+        .block(Block::default().padding(Padding::horizontal(1)))
 }

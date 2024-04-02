@@ -9,6 +9,8 @@ pub struct Interpreter {
     cur: usize,
     input: String,
     output: String,
+
+    step_count: usize,
 }
 
 impl Interpreter {
@@ -23,6 +25,7 @@ impl Interpreter {
             cur: 0,
             input: input.to_string(),
             output: String::new(),
+            step_count: 0,
         }
     }
 
@@ -44,6 +47,10 @@ impl Interpreter {
 
     pub fn current_ptr(&self) -> u8 {
         self.ptr
+    }
+
+    pub fn total_step_count(&self) -> usize {
+        self.step_count
     }
 
     pub fn current_line_and_pos(&self) -> Option<(usize, usize)> {
@@ -111,6 +118,8 @@ impl Interpreter {
                 }
             }
         }
+
+        self.step_count += 1;
     }
 
     fn current_token(&self) -> Option<Token> {

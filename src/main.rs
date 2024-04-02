@@ -32,6 +32,10 @@ struct Args {
     /// brainf*ck source code file
     #[arg(short = 's', long = "source", value_name = "FILE")]
     source_file: String,
+
+    /// show debug info
+    #[arg(long, hide = true)]
+    debug: bool,
 }
 
 fn setup() -> std::io::Result<Terminal<CrosstermBackend<Stdout>>> {
@@ -55,10 +59,10 @@ fn initialize_panic_handler() {
     }));
 }
 
-fn run<B: Backend>(terminal: &mut Terminal<B>, source: String) -> std::io::Result<()> {
+fn run<B: Backend>(terminal: &mut Terminal<B>, source: String, debug: bool) -> std::io::Result<()> {
     let speed = Arc::new(RwLock::new(Speed::Normal));
     let (_, rx) = event::new(speed.clone());
-    App::new(source, speed).start(terminal, rx)
+    App::new(source, speed, debug).start(terminal, rx)
 }
 
 fn read_source_file(file: &str) -> std::io::Result<String> {
@@ -75,7 +79,7 @@ fn main() -> std::io::Result<()> {
     let source = read_source_file(&args.source_file)?;
 
     let mut terminal = setup()?;
-    let ret = run(&mut terminal, source);
+    let ret = run(&mut terminal, source, args.debug);
 
     shutdown()?;
     ret
