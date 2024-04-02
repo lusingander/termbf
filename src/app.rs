@@ -12,6 +12,7 @@ use crate::{event::AppEvent, interpreter::Interpreter, key_code, key_code_char, 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum State {
+    Default,
     Stop,
     Play,
     AutoPlay,
@@ -78,7 +79,7 @@ impl App {
         let interpreter = Interpreter::new(&source, input_input.value());
         let source = source.lines().map(|s| s.to_string()).collect();
         App {
-            state: State::Stop,
+            state: State::Default,
             edit_state: EditState::None,
             selected: SelectItem::Source,
             source,
@@ -167,30 +168,23 @@ impl App {
                 _ => {}
             },
             key_code_char!('e') => {
-                if let (State::Stop, SelectItem::Input) = (self.state, self.selected) {
-                    if !self.interpreter.end() {
-                        self.edit_state = EditState::EditInput;
-                        self.state = State::Stop;
-                        self.reset_interpreter();
-                    }
+                if let (State::Default, SelectItem::Input) = (self.state, self.selected) {
+                    self.edit_state = EditState::EditInput;
+                    self.reset_interpreter();
                 }
             }
             key_code!(KeyCode::Enter) => match (self.state, self.selected) {
                 (_, SelectItem::Reset) => {
-                    self.state = State::Stop;
+                    self.state = State::Default;
                     self.reset_interpreter();
                 }
                 (_, SelectItem::Start) => {
-                    if self.interpreter.end() {
-                        self.state = State::Stop;
-                    } else {
+                    if !self.interpreter.end() {
                         self.state = State::AutoPlay;
                     }
                 }
                 (_, SelectItem::Pause) => {
-                    if self.interpreter.end() {
-                        self.state = State::Stop;
-                    } else {
+                    if !self.interpreter.end() {
                         self.state = State::Play;
                     }
                 }
@@ -198,9 +192,7 @@ impl App {
                     if self.interpreter.end() {
                         self.state = State::Stop;
                     } else {
-                        if self.state != State::Stop {
-                            self.interpreter.step();
-                        }
+                        self.interpreter.step();
                         self.state = State::Play;
                     }
                 }

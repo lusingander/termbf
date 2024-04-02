@@ -121,7 +121,7 @@ fn source_text(app: &App) -> Text {
     };
     let cur_lp = app.interpreter.current_line_and_pos();
 
-    if app.state == State::Stop || cur_lp.is_none() {
+    if app.state == State::Default || cur_lp.is_none() {
         let lines: Vec<Line> = app
             .source
             .iter()
@@ -226,10 +226,9 @@ fn build_memory<'a>(
     mem: &'a Vec<u8>,
     item: SelectItem,
 ) -> Memory<'a> {
-    let cur_ptr = if app.state == State::Stop {
-        None
-    } else {
-        Some(app.interpreter.current_ptr())
+    let cur_ptr = match app.state {
+        State::Default | State::Stop => None,
+        State::Play | State::AutoPlay => Some(app.interpreter.current_ptr()),
     };
     Memory::new(mem, cur_ptr)
         .style(get_content_base_style(app, item))
@@ -288,7 +287,7 @@ fn get_block_style(app: &App, item: SelectItem) -> Style {
 
 fn get_style_base(app: &App, item: SelectItem, selected_color: Color) -> Style {
     match app.state {
-        State::Stop => {
+        State::Default | State::Stop => {
             if app.selected == item {
                 Style::default().fg(selected_color)
             } else {
@@ -311,42 +310,36 @@ fn build_help(app: &App) -> Paragraph {
         SelectItem::Input => {
             if app.edit_state == EditState::EditInput {
                 "<Esc> exit editing"
-            } else if app.state != State::Stop || app.interpreter.end() {
-                "<Esc> quit app, <Tab/BackTab> next/prev"
-            } else {
+            } else if app.state == State::Default {
                 "<Esc> quit app, <Tab/BackTab> next/prev, <e> enter editing"
+            } else {
+                "<Esc> quit app, <Tab/BackTab> next/prev"
             }
         }
         SelectItem::Memory => "<Esc> quit app, <Tab/BackTab> next/prev",
         SelectItem::Output => "<Esc> quit app, <Tab/BackTab> next/prev",
-        SelectItem::Reset => {
-            if app.state != State::Stop || app.interpreter.end() {
+        SelectItem::Reset => match app.state {
+            State::Default => "<Esc> quit app, <Tab/BackTab> next/prev",
+            State::Stop | State::Play | State::AutoPlay => {
                 "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> reset"
-            } else {
-                "<Esc> quit app, <Tab/BackTab> next/prev"
             }
-        }
-        SelectItem::Start => {
-            if app.state == State::AutoPlay || app.interpreter.end() {
-                "<Esc> quit app, <Tab/BackTab> next/prev"
-            } else {
+        },
+        SelectItem::Start => match app.state {
+            State::Default | State::Play => {
                 "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> start"
             }
-        }
-        SelectItem::Pause => {
-            if app.state == State::AutoPlay {
-                "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> pause"
-            } else {
-                "<Esc> quit app, <Tab/BackTab> next/prev"
-            }
-        }
-        SelectItem::Step => {
-            if app.interpreter.end() {
-                "<Esc> quit app, <Tab/BackTab> next/prev"
-            } else {
+            State::Stop | State::AutoPlay => "<Esc> quit app, <Tab/BackTab> next/prev",
+        },
+        SelectItem::Pause => match app.state {
+            State::Default | State::Stop | State::Play => "<Esc> quit app, <Tab/BackTab> next/prev",
+            State::AutoPlay => "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> pause",
+        },
+        SelectItem::Step => match app.state {
+            State::Stop => "<Esc> quit app, <Tab/BackTab> next/prev",
+            State::Default | State::Play | State::AutoPlay => {
                 "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> step"
             }
-        }
+        },
         SelectItem::Speed => "<Esc> quit app, <Tab/BackTab> next/prev, <j/k> select",
     };
     Paragraph::new(help)
