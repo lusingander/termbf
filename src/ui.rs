@@ -52,7 +52,7 @@ fn render_outputs(f: &mut Frame, area: Rect, app: &App) {
     let source_area = build_textarea(app, "Source", source, SelectItem::Source);
     f.render_widget(source_area, chunks[0]);
 
-    let input = get_input_content(app);
+    let input = input_content(app, chunks[1]);
     let input_area = build_textarea(app, "Input", input, SelectItem::Input);
     f.render_widget(input_area, chunks[1]);
     set_input_cursor(f, app, chunks[1]);
@@ -61,7 +61,7 @@ fn render_outputs(f: &mut Frame, area: Rect, app: &App) {
     let memory = build_memory(app, "Memory", mem, SelectItem::Memory);
     f.render_widget(memory, chunks[2]);
 
-    let output = app.interpreter.output();
+    let output = output_content(app, chunks[3]);
     let output_area = build_textarea(app, "Output", output, SelectItem::Output);
     f.render_widget(output_area, chunks[3]);
 }
@@ -105,7 +105,13 @@ fn source_text(app: &App) -> Text {
     let cur_lp = app.interpreter.current_line_and_pos();
 
     if app.state == State::Stop || cur_lp.is_none() {
-        return Text::from(Line::styled(&app.source, base_style));
+        let lines: Vec<Line> = app
+            .source
+            .iter()
+            .skip(app.source_scroll_offset)
+            .map(|line| Line::styled(line, base_style))
+            .collect();
+        return Text::from(lines);
     }
 
     let cur_style = Style::default().fg(APP_COLOR).add_modifier(Modifier::BOLD);
@@ -113,8 +119,9 @@ fn source_text(app: &App) -> Text {
     let (cur_line, cur_pos) = cur_lp.unwrap();
     let lines: Vec<Line> = app
         .source
-        .lines()
+        .iter()
         .enumerate()
+        .skip(app.source_scroll_offset)
         .map(|(i, line)| {
             if i == cur_line {
                 let mut cs = line.chars();
@@ -134,21 +141,38 @@ fn source_text(app: &App) -> Text {
     Text::from(lines)
 }
 
-fn get_input_content(app: &App) -> &str {
-    if app.interpreter.running() {
+fn input_content(app: &App, area: Rect) -> &str {
+    let input = if app.interpreter.running() {
         app.interpreter.input()
     } else {
         app.input_input.value()
+    };
+
+    if app.edit_state == EditState::EditInput {
+        let max_width = area.width - 4 /* border + padding */;
+        let input_start = input.len().saturating_sub(max_width as usize);
+        &input[input_start..]
+    } else {
+        input
     }
 }
 
 fn set_input_cursor(f: &mut Frame, app: &App, area: Rect) {
     if app.edit_state == EditState::EditInput {
         let visual_cursor = app.input_input.visual_cursor() as u16;
-        let cursor_x = area.x + 2 /* border + padding */ + visual_cursor;
+        let max_width = area.width - 4 /* border + padding */;
+        let cursor_x = area.x + 2 /* border + padding */ + visual_cursor.min(max_width);
         let cursor_y = area.y + 1 /* border */;
         f.set_cursor(cursor_x, cursor_y);
     }
+}
+
+fn output_content(app: &App, area: Rect) -> &str {
+    let output = app.interpreter.output();
+
+    let max_width = area.width - 4 /* border + padding */;
+    let output_start = output.len().saturating_sub(max_width as usize);
+    &output[output_start..]
 }
 
 fn build_header(label: &str) -> Paragraph {

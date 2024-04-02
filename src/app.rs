@@ -3,7 +3,7 @@ use std::{
     time::Duration,
 };
 
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{Event, KeyCode, KeyEvent};
 use itsuki::zero_indexed_enum;
 use ratatui::{backend::Backend, Terminal};
 use tui_input::{backend::crossterm::EventHandler, Input};
@@ -64,7 +64,8 @@ pub struct App {
     pub state: State,
     pub edit_state: EditState,
     pub selected: SelectItem,
-    pub source: String,
+    pub source: Vec<String>,
+    pub source_scroll_offset: usize,
     pub input_input: Input,
     pub interpreter: Interpreter,
     pub speed: Arc<RwLock<Speed>>,
@@ -75,11 +76,13 @@ impl App {
     pub fn new(source: String, speed: Arc<RwLock<Speed>>) -> App {
         let input_input = Input::default();
         let interpreter = Interpreter::new(&source, input_input.value());
+        let source = source.lines().map(|s| s.to_string()).collect();
         App {
             state: State::Stop,
             edit_state: EditState::None,
             selected: SelectItem::Source,
             source,
+            source_scroll_offset: 0,
             input_input,
             interpreter,
             speed,
@@ -132,12 +135,36 @@ impl App {
             key_code!(KeyCode::Esc) | key_code_char!('c', Ctrl) => {
                 self.quit = true;
             }
-            key_code_char!('j') | key_code_char!('l') => {
+            key_code!(KeyCode::Tab) => {
                 self.selected = self.selected.next();
             }
-            key_code_char!('k') | key_code_char!('h') => {
+            key_code!(KeyCode::BackTab) => {
                 self.selected = self.selected.prev();
             }
+            key_code_char!('j') => match self.selected {
+                SelectItem::Source => {
+                    if self.source_scroll_offset < self.source.len() - 1 {
+                        self.source_scroll_offset = self.source_scroll_offset.saturating_add(1);
+                    }
+                }
+                SelectItem::Speed => {
+                    let mut s = self.speed.write().unwrap();
+                    *s = s.next();
+                }
+                _ => {}
+            },
+            key_code_char!('k') => match self.selected {
+                SelectItem::Source => {
+                    if self.source_scroll_offset > 0 {
+                        self.source_scroll_offset = self.source_scroll_offset.saturating_sub(1);
+                    }
+                }
+                SelectItem::Speed => {
+                    let mut s = self.speed.write().unwrap();
+                    *s = s.prev();
+                }
+                _ => {}
+            },
             key_code_char!('e') => {
                 if let (State::Stop, SelectItem::Input) = (self.state, self.selected) {
                     self.edit_state = EditState::EditInput;
@@ -174,10 +201,6 @@ impl App {
                         self.state = State::Play;
                     }
                 }
-                (_, SelectItem::Speed) => {
-                    let mut s = self.speed.write().unwrap();
-                    *s = s.next();
-                }
                 _ => {}
             },
             _ => {}
@@ -197,6 +220,7 @@ impl App {
     }
 
     fn reset_interpreter(&mut self) {
-        self.interpreter = Interpreter::new(&self.source, self.input_input.value())
+        let source = self.source.join("\n");
+        self.interpreter = Interpreter::new(&source, self.input_input.value())
     }
 }
