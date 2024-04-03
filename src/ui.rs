@@ -222,13 +222,13 @@ where
     T: Into<Text<'a>>,
 {
     Paragraph::new(content)
-        .style(get_content_base_style(app, item))
+        .style(get_style_base(app, item, DEFAULT_COLOR, DISABLED_COLOR))
         .wrap(Wrap { trim: false })
         .block(
             Block::bordered()
                 .title(label)
                 .padding(Padding::horizontal(1))
-                .style(get_block_style(app, item)),
+                .style(get_style_base(app, item, APP_COLOR, DEFAULT_COLOR)),
         )
 }
 
@@ -243,7 +243,7 @@ fn build_memory<'a>(
         State::Play | State::AutoPlay => Some(app.interpreter.current_ptr()),
     };
     Memory::new(mem, cur_ptr)
-        .style(get_content_base_style(app, item))
+        .style(get_style_base(app, item, DEFAULT_COLOR, DISABLED_COLOR))
         .ptr_style(
             Style::default()
                 .fg(APP_COLOR)
@@ -253,18 +253,18 @@ fn build_memory<'a>(
             Block::bordered()
                 .title(label)
                 .padding(Padding::horizontal(1))
-                .style(get_block_style(app, item)),
+                .style(get_style_base(app, item, APP_COLOR, DEFAULT_COLOR)),
         )
 }
 
 fn build_button<'a>(app: &'a App, label: &'a str, item: SelectItem) -> Paragraph<'a> {
     Paragraph::new(label)
-        .style(get_style_base(app, item, APP_COLOR))
+        .style(get_style_base(app, item, APP_COLOR, DEFAULT_COLOR))
         .block(
             Block::bordered()
                 .border_type(BorderType::Rounded)
                 .padding(Padding::horizontal(1))
-                .style(get_block_style(app, item)),
+                .style(get_style_base(app, item, APP_COLOR, DEFAULT_COLOR)),
         )
 }
 
@@ -280,37 +280,34 @@ fn build_speed_select(app: &App, item: SelectItem) -> Paragraph {
         }
     };
     Paragraph::new(label)
-        .style(get_style_base(app, item, APP_COLOR))
+        .style(get_style_base(app, item, APP_COLOR, DEFAULT_COLOR))
         .block(
             Block::default()
                 .borders(Borders::NONE)
                 .padding(Padding::symmetric(1, 1))
-                .style(get_block_style(app, item)),
+                .style(get_style_base(app, item, APP_COLOR, DEFAULT_COLOR)),
         )
 }
 
-fn get_content_base_style(app: &App, item: SelectItem) -> Style {
-    get_style_base(app, item, DEFAULT_COLOR)
-}
-
-fn get_block_style(app: &App, item: SelectItem) -> Style {
-    get_style_base(app, item, APP_COLOR)
-}
-
-fn get_style_base(app: &App, item: SelectItem, selected_color: Color) -> Style {
+fn get_style_base(
+    app: &App,
+    item: SelectItem,
+    selected_color: Color,
+    not_selected_color: Color,
+) -> Style {
     match app.state {
         State::Default | State::Stop => {
             if app.selected == item {
                 Style::default().fg(selected_color)
             } else {
-                Style::default().fg(DISABLED_COLOR)
+                Style::default().fg(not_selected_color)
             }
         }
         State::Play | State::AutoPlay => {
             if app.selected == item {
                 Style::default().fg(selected_color)
             } else {
-                Style::default().fg(DISABLED_COLOR)
+                Style::default().fg(not_selected_color)
             }
         }
     }
