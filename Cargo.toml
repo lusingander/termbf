@@ -2,6 +2,15 @@
 name = "termbf"
 version = "0.1.0"
 edition = "2021"
+description = "Terminal Brainf*ck visualizer"
+authors = ["Kyosuke Fujimoto <kyoro.f@gmail.com>"]
+homepage = "https://github.com/lusingander/termbf"
+repository = "https://github.com/lusingander/termbf"
+readme = "README.md"
+license = "MIT"
+keywords = ["brainfuck", "interpreter", "cli", "tui", "terminal"]
+categories = ["command-line-utilities"]
+
 
 [dependencies]
 clap = { version = "4.5.4", features = ["derive"] }
