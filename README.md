@@ -1,5 +1,7 @@
 # termbf
 
+[![Crate Status](https://img.shields.io/crates/v/termbf.svg)](https://crates.io/crates/termbf)
+
 Terminal Brainf\*ck visualizer
 
 <img src="./img/demo.gif">
