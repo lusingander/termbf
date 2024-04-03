@@ -2,6 +2,27 @@
 
 Terminal Brainf\*ck visualizer
 
+<img src="./img/demo.gif">
+
+## Installation
+
+```
+$ cargo install termbf
+```
+
+## Usage
+
+```
+termbf - Terminal Brainf*ck visualizer
+
+Usage: termbf --source <FILE>
+
+Options:
+  -s, --source <FILE>  brainf*ck source code file
+  -h, --help           Print help
+  -V, --version        Print version
+```
+
 ## Brainf\*ck interpreter specification
 
 - EOF returns 0
