@@ -317,43 +317,7 @@ fn get_style_base(app: &App, item: SelectItem, selected_color: Color) -> Style {
 }
 
 fn build_help(app: &App) -> Paragraph {
-    let help = match app.selected {
-        SelectItem::Source => "<Esc> quit app, <Tab/BackTab> next/prev, <j/k> scroll",
-        SelectItem::Input => {
-            if app.edit_state == EditState::EditInput {
-                "<Esc> exit editing"
-            } else if app.state == State::Default {
-                "<Esc> quit app, <Tab/BackTab> next/prev, <e> enter editing"
-            } else {
-                "<Esc> quit app, <Tab/BackTab> next/prev"
-            }
-        }
-        SelectItem::Memory => "<Esc> quit app, <Tab/BackTab> next/prev",
-        SelectItem::Output => "<Esc> quit app, <Tab/BackTab> next/prev",
-        SelectItem::Reset => match app.state {
-            State::Default => "<Esc> quit app, <Tab/BackTab> next/prev",
-            State::Stop | State::Play | State::AutoPlay => {
-                "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> reset"
-            }
-        },
-        SelectItem::Start => match app.state {
-            State::Default | State::Play => {
-                "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> start"
-            }
-            State::Stop | State::AutoPlay => "<Esc> quit app, <Tab/BackTab> next/prev",
-        },
-        SelectItem::Pause => match app.state {
-            State::Default | State::Stop | State::Play => "<Esc> quit app, <Tab/BackTab> next/prev",
-            State::AutoPlay => "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> pause",
-        },
-        SelectItem::Step => match app.state {
-            State::Stop => "<Esc> quit app, <Tab/BackTab> next/prev",
-            State::Default | State::Play | State::AutoPlay => {
-                "<Esc> quit app, <Tab/BackTab> next/prev, <Enter> step"
-            }
-        },
-        SelectItem::Speed => "<Esc> quit app, <Tab/BackTab> next/prev, <j/k> select",
-    };
+    let help = help_msg_str(app);
     Paragraph::new(help)
         .style(Style::default().fg(DISABLED_COLOR))
         .block(
@@ -361,6 +325,61 @@ fn build_help(app: &App) -> Paragraph {
                 .borders(Borders::TOP)
                 .padding(Padding::horizontal(1)),
         )
+}
+
+fn help_msg_str(app: &App) -> String {
+    let mut helps = vec!["<Esc> quit app", "<Tab/BackTab> next/prev"];
+
+    match app.selected {
+        SelectItem::Source => {
+            helps.push("<j/k> scroll");
+        }
+        SelectItem::Input => {
+            if app.edit_state == EditState::EditInput {
+                helps.clear();
+                helps.push("<Esc> exit editing");
+            } else if app.state == State::Default {
+                helps.push("<e> enter editing");
+            }
+        }
+        SelectItem::Memory => {}
+        SelectItem::Output => {}
+        SelectItem::Reset => {
+            if let State::Stop | State::Play | State::AutoPlay = app.state {
+                helps.push("<Enter> reset");
+            }
+        }
+        SelectItem::Start => {
+            if let State::Default | State::Play = app.state {
+                helps.push("<Enter> start");
+            }
+        }
+        SelectItem::Pause => {
+            if let State::AutoPlay = app.state {
+                helps.push("<Enter> pause");
+            }
+        }
+        SelectItem::Step => {
+            if let State::Default | State::Play | State::AutoPlay = app.state {
+                helps.push("<Enter> step");
+            }
+        }
+        SelectItem::Speed => {
+            helps.push("<j/k> select");
+        }
+    };
+
+    match app.state {
+        State::Default | State::Play => {
+            helps.push("<Space> start");
+        }
+        State::AutoPlay => {
+            helps.push("<Space> pause");
+        }
+        _ => {}
+    }
+
+    helps.join(", ")
 }
 
 fn build_debug_info(app: &App) -> Paragraph {

@@ -222,6 +222,15 @@ impl App {
                 }
                 _ => {}
             },
+            key_code_char!(' ') => match self.state {
+                State::Default | State::Play => {
+                    self.state = State::AutoPlay;
+                }
+                State::AutoPlay => {
+                    self.state = State::Play;
+                }
+                _ => {}
+            },
             _ => {}
         }
     }
