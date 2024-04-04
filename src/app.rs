@@ -10,18 +10,20 @@ use tui_input::{backend::crossterm::EventHandler, Input};
 
 use crate::{event::AppEvent, interpreter::Interpreter, key_code, key_code_char, ui};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum State {
-    Default,
-    Stop,
-    Play,
-    AutoPlay,
+zero_indexed_enum! {
+    State => [
+        Default,
+        Stop,
+        Play,
+        AutoPlay,
+    ]
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EditState {
-    None,
-    EditInput,
+zero_indexed_enum! {
+    EditState => [
+        None,
+        EditInput,
+    ]
 }
 
 zero_indexed_enum! {
@@ -39,6 +41,24 @@ zero_indexed_enum! {
 }
 
 impl SelectItem {
+    fn next_in_state(&self, state: State) -> SelectItem {
+        let mut item = self.next();
+        let not_allowed = Self::not_allowed_items(state);
+        while not_allowed.contains(&item) {
+            item = item.next();
+        }
+        item
+    }
+
+    fn prev_in_state(&self, state: State) -> SelectItem {
+        let mut item = self.prev();
+        let not_allowed = Self::not_allowed_items(state);
+        while not_allowed.contains(&item) {
+            item = item.prev();
+        }
+        item
+    }
+
     fn not_allowed_items(state: State) -> &'static [SelectItem] {
         use SelectItem::*;
         match state {
@@ -150,18 +170,10 @@ impl App {
                 self.quit = true;
             }
             key_code!(KeyCode::Tab) => {
-                self.selected = self.selected.next();
-                let not_allowed = SelectItem::not_allowed_items(self.state);
-                while not_allowed.contains(&self.selected) {
-                    self.selected = self.selected.next();
-                }
+                self.selected = self.selected.next_in_state(self.state);
             }
             key_code!(KeyCode::BackTab) => {
-                self.selected = self.selected.prev();
-                let not_allowed = SelectItem::not_allowed_items(self.state);
-                while not_allowed.contains(&self.selected) {
-                    self.selected = self.selected.prev();
-                }
+                self.selected = self.selected.prev_in_state(self.state);
             }
             key_code_char!('j') => match self.selected {
                 SelectItem::Source => {
@@ -193,25 +205,25 @@ impl App {
                     self.reset_interpreter();
                 }
             }
-            key_code!(KeyCode::Enter) => match (self.state, self.selected) {
-                (_, SelectItem::Reset) => {
+            key_code!(KeyCode::Enter) => match self.selected {
+                SelectItem::Reset => {
                     self.state = State::Default;
                     self.selected = SelectItem::Start;
                     self.reset_interpreter();
                 }
-                (_, SelectItem::Start) => {
+                SelectItem::Start => {
                     if !self.interpreter.end() {
                         self.state = State::AutoPlay;
                         self.selected = SelectItem::Pause;
                     }
                 }
-                (_, SelectItem::Pause) => {
+                SelectItem::Pause => {
                     if !self.interpreter.end() {
                         self.state = State::Play;
                         self.selected = SelectItem::Start;
                     }
                 }
-                (_, SelectItem::Step) => {
+                SelectItem::Step => {
                     if self.interpreter.end() {
                         self.state = State::Stop;
                         self.selected = SelectItem::Reset;
