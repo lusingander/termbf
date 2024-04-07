@@ -42,21 +42,13 @@ zero_indexed_enum! {
 
 impl SelectItem {
     fn next_in_state(&self, state: State) -> SelectItem {
-        let mut item = self.next();
         let not_allowed = Self::not_allowed_items(state);
-        while not_allowed.contains(&item) {
-            item = item.next();
-        }
-        item
+        self.next_in(|item| !not_allowed.contains(&item))
     }
 
     fn prev_in_state(&self, state: State) -> SelectItem {
-        let mut item = self.prev();
         let not_allowed = Self::not_allowed_items(state);
-        while not_allowed.contains(&item) {
-            item = item.prev();
-        }
-        item
+        self.prev_in(|item| !not_allowed.contains(&item))
     }
 
     fn not_allowed_items(state: State) -> &'static [SelectItem] {
