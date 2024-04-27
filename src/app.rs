@@ -161,10 +161,10 @@ impl App {
             key_code!(KeyCode::Esc) | key_code_char!('c', Ctrl) => {
                 self.quit = true;
             }
-            key_code!(KeyCode::Tab) => {
+            key_code_char!('n', Ctrl) | key_code!(KeyCode::Tab) => {
                 self.selected = self.selected.next_in_state(self.state);
             }
-            key_code!(KeyCode::BackTab) => {
+            key_code_char!('p', Ctrl) | key_code!(KeyCode::BackTab) => {
                 self.selected = self.selected.prev_in_state(self.state);
             }
             key_code_char!('j') => match self.selected {

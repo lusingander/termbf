@@ -325,7 +325,7 @@ fn build_help(app: &App) -> Paragraph {
 }
 
 fn help_msg_str(app: &App) -> String {
-    let mut helps = vec!["<Esc> quit app", "<Tab/BackTab> next/prev"];
+    let mut helps = vec!["<Esc> quit app", "<C-n/C-p> next/prev"];
 
     match app.selected {
         SelectItem::Source => {
