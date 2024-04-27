@@ -367,7 +367,7 @@ fn help_msg_str(app: &App) -> String {
     };
 
     match app.state {
-        State::Default | State::Play => {
+        State::Default | State::Play if app.edit_state == EditState::None => {
             helps.push("<Space> start");
         }
         State::AutoPlay => {
