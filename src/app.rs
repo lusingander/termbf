@@ -226,15 +226,26 @@ impl App {
                 }
                 _ => {}
             },
-            key_code_char!(' ') => match self.state {
-                State::Default | State::Play => {
-                    self.state = State::AutoPlay;
+            key_code_char!(' ') => {
+                match self.state {
+                    State::Default | State::Play => {
+                        self.state = State::AutoPlay;
+                    }
+                    State::AutoPlay => {
+                        self.state = State::Play;
+                    }
+                    _ => {}
                 }
-                State::AutoPlay => {
-                    self.state = State::Play;
+                match self.selected {
+                    SelectItem::Start => {
+                        self.selected = SelectItem::Pause;
+                    }
+                    SelectItem::Pause => {
+                        self.selected = SelectItem::Start;
+                    }
+                    _ => {}
                 }
-                _ => {}
-            },
+            }
             _ => {}
         }
     }
