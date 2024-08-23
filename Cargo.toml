@@ -14,10 +14,9 @@ categories = ["command-line-utilities"]
 
 [dependencies]
 clap = { version = "4.5.4", features = ["derive"] }
-crossterm = "0.27.0"
 itsuki = "0.1.2"
-ratatui = { version = "0.26.2", features = [
+ratatui = { version = "0.28.0", features = [
     "all-widgets",
     "unstable-widget-ref",
 ] }
-tui-input = "0.8.0"
+tui-input = "0.10.0"

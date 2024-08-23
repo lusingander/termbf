@@ -25,7 +25,7 @@ pub fn render(f: &mut Frame, app: &App) {
         Length(2),
         Length(debug_area_length),
     ];
-    let chunks = Layout::vertical(constraints).split(f.size());
+    let chunks = Layout::vertical(constraints).split(f.area());
 
     render_header(f, chunks[0]);
     render_outputs(f, chunks[1], app);
@@ -192,7 +192,7 @@ fn set_input_cursor(f: &mut Frame, app: &App, area: Rect) {
         let max_width = area.width - 4 /* border + padding */;
         let cursor_x = area.x + 2 /* border + padding */ + visual_cursor.min(max_width);
         let cursor_y = area.y + 1 /* border */;
-        f.set_cursor(cursor_x, cursor_y);
+        f.set_cursor_position((cursor_x, cursor_y));
     }
 }
 

@@ -3,9 +3,12 @@ use std::{
     time::Duration,
 };
 
-use crossterm::event::{Event, KeyCode, KeyEvent};
 use itsuki::zero_indexed_enum;
-use ratatui::{backend::Backend, Terminal};
+use ratatui::{
+    backend::Backend,
+    crossterm::event::{Event, KeyCode, KeyEvent},
+    Terminal,
+};
 use tui_input::{backend::crossterm::EventHandler, Input};
 
 use crate::{event::AppEvent, interpreter::Interpreter, key_code, key_code_char, ui};

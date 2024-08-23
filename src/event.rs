@@ -3,7 +3,7 @@ use std::{
     thread,
 };
 
-use crossterm::event::{Event, KeyEvent};
+use ratatui::crossterm::event::{Event, KeyEvent};
 
 use crate::app::Speed;
 
@@ -18,7 +18,7 @@ pub fn new(speed: Arc<RwLock<Speed>>) -> (mpsc::Sender<AppEvent>, mpsc::Receiver
 
     let event_tx = tx.clone();
     thread::spawn(move || loop {
-        match crossterm::event::read().unwrap() {
+        match ratatui::crossterm::event::read().unwrap() {
             Event::Key(ev) => {
                 event_tx.send(AppEvent::Key(ev)).unwrap();
             }
