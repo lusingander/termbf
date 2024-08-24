@@ -13,8 +13,8 @@ categories = ["command-line-utilities"]
 
 
 [dependencies]
-clap = { version = "4.5.4", features = ["derive"] }
-itsuki = "0.1.2"
+clap = { version = "4.5.16", features = ["derive"] }
+itsuki = "0.2.0"
 ratatui = { version = "0.28.0", features = [
     "all-widgets",
     "unstable-widget-ref",

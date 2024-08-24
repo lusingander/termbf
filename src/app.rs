@@ -13,34 +13,31 @@ use tui_input::{backend::crossterm::EventHandler, Input};
 
 use crate::{event::AppEvent, interpreter::Interpreter, key_code, key_code_char, ui};
 
-zero_indexed_enum! {
-    State => [
-        Default,
-        Stop,
-        Play,
-        AutoPlay,
-    ]
+#[zero_indexed_enum]
+enum State {
+    Default,
+    Stop,
+    Play,
+    AutoPlay,
 }
 
-zero_indexed_enum! {
-    EditState => [
-        None,
-        EditInput,
-    ]
+#[zero_indexed_enum]
+enum EditState {
+    None,
+    EditInput,
 }
 
-zero_indexed_enum! {
-    SelectItem => [
-        Source,
-        Input,
-        Memory,
-        Output,
-        Reset,
-        Start,
-        Pause,
-        Step,
-        Speed,
-    ]
+#[zero_indexed_enum]
+enum SelectItem {
+    Source,
+    Input,
+    Memory,
+    Output,
+    Reset,
+    Start,
+    Pause,
+    Step,
+    Speed,
 }
 
 impl SelectItem {
@@ -65,14 +62,13 @@ impl SelectItem {
     }
 }
 
-zero_indexed_enum! {
-    Speed => [
-        VerySlow,
-        Slow,
-        Normal,
-        Fast,
-        VeryFast,
-    ]
+#[zero_indexed_enum]
+enum Speed {
+    VerySlow,
+    Slow,
+    Normal,
+    Fast,
+    VeryFast,
 }
 
 impl Speed {
