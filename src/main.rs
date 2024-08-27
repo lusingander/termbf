@@ -7,21 +7,13 @@ mod widget;
 
 use std::{
     fs::File,
-    io::{stdout, Read, Stdout},
-    panic,
+    io::Read,
     sync::{Arc, RwLock},
 };
 
 use app::Speed;
 use clap::Parser;
-use ratatui::{
-    backend::{Backend, CrosstermBackend},
-    crossterm::{
-        execute,
-        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    },
-    Terminal,
-};
+use ratatui::{backend::Backend, Terminal};
 
 use crate::app::App;
 
@@ -38,27 +30,6 @@ struct Args {
     debug: bool,
 }
 
-fn setup() -> std::io::Result<Terminal<CrosstermBackend<Stdout>>> {
-    enable_raw_mode()?;
-    execute!(stdout(), EnterAlternateScreen)?;
-    let backend = CrosstermBackend::new(stdout());
-    Terminal::new(backend)
-}
-
-fn shutdown() -> std::io::Result<()> {
-    execute!(stdout(), LeaveAlternateScreen)?;
-    disable_raw_mode()?;
-    Ok(())
-}
-
-fn initialize_panic_handler() {
-    let original_hook = panic::take_hook();
-    panic::set_hook(Box::new(move |panic_info| {
-        shutdown().unwrap();
-        original_hook(panic_info);
-    }));
-}
-
 fn run<B: Backend>(terminal: &mut Terminal<B>, source: String, debug: bool) -> std::io::Result<()> {
     let speed = Arc::new(RwLock::new(Speed::Normal));
     let (_, rx) = event::new(speed.clone());
@@ -73,14 +44,12 @@ fn read_source_file(file: &str) -> std::io::Result<String> {
 }
 
 fn main() -> std::io::Result<()> {
-    initialize_panic_handler();
-
     let args = Args::parse();
     let source = read_source_file(&args.source_file)?;
 
-    let mut terminal = setup()?;
+    let mut terminal = ratatui::init();
     let ret = run(&mut terminal, source, args.debug);
 
-    shutdown()?;
+    ratatui::restore();
     ret
 }
