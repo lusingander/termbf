@@ -1,7 +1,6 @@
 mod app;
 mod event;
 mod interpreter;
-mod macros;
 mod ui;
 mod widget;
 
