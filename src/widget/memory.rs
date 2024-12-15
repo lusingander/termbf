@@ -42,7 +42,7 @@ impl<'a> Memory<'a> {
     }
 }
 
-impl<'a> Widget for Memory<'a> {
+impl Widget for Memory<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         self.block.render(area, buf);
         let inner = self.block.inner_if_some(area);
