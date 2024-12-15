@@ -4,6 +4,7 @@ use std::{
 };
 
 use itsuki::zero_indexed_enum;
+use laurier::{key_code, key_code_char};
 use ratatui::{
     backend::Backend,
     crossterm::event::{Event, KeyCode, KeyEvent},
@@ -11,7 +12,7 @@ use ratatui::{
 };
 use tui_input::{backend::crossterm::EventHandler, Input};
 
-use crate::{event::AppEvent, interpreter::Interpreter, key_code, key_code_char, ui};
+use crate::{event::AppEvent, interpreter::Interpreter, ui};
 
 #[zero_indexed_enum]
 enum State {

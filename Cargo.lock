@@ -282,6 +282,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "laurier"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eab6c93df4d64a8b50f6fd7b9320b36a0bb434b9fdb85b6bf9473f8686f0081a"
+dependencies = [
+ "ratatui",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.153"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -574,6 +583,7 @@ version = "0.1.1"
 dependencies = [
  "clap",
  "itsuki",
+ "laurier",
  "ratatui",
  "tui-input",
 ]
