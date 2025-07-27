@@ -12,6 +12,7 @@ keywords = ["brainfuck", "interpreter", "cli", "tui", "terminal"]
 categories = ["command-line-utilities"]
 rust-version = "1.79.0"
 
+exclude = ["/.github", "/img", "/bf"]
 
 [dependencies]
 clap = { version = "4.5.41", features = ["derive"] }
