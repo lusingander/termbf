@@ -67,7 +67,7 @@ impl Memory<'_> {
     fn memories_str(&self, w: usize) -> String {
         self.memory
             .iter()
-            .flat_map(|m| format!("{:>02X}{}", m, DIVIDER).chars().collect::<Vec<_>>())
+            .flat_map(|m| format!("{m:>02X}{DIVIDER}").chars().collect::<Vec<_>>())
             .take(w)
             .collect()
     }
