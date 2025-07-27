@@ -1,0 +1,54 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - master
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      msrv: ${{ steps.get-msrv.outputs.msrv }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get MSRV
+        id: get-msrv
+        run: |
+          MSRV=$(grep '^rust-version' Cargo.toml | cut -d '"' -f 2)
+          echo "msrv=$MSRV" >> $GITHUB_OUTPUT
+  build:
+    needs: prepare
+    strategy:
+      matrix:
+        versions:
+          - stable
+          - ${{ needs.prepare.outputs.msrv }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.versions }}
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Version
+        run: |
+          rustc --version
+          cargo --version
+          cargo fmt -- --version
+          cargo clippy -- --version
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Build
+        run: cargo build --verbose
+      - name: Lint
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Run tests
+        run: cargo test --verbose
