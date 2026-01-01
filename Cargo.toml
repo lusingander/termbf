@@ -15,8 +15,8 @@ rust-version = "1.79.0"
 exclude = ["/.github", "/img", "/bf"]
 
 [dependencies]
-clap = { version = "4.5.41", features = ["derive"] }
+clap = { version = "4.5.53", features = ["derive"] }
 itsuki = "0.2.1"
-laurier = "0.1.0"
-ratatui = { version = "0.29.0" }
-tui-input = "0.14.0"
+laurier = "0.3.0"
+ratatui = "0.30.0"
+tui-input = "0.15.0"

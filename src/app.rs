@@ -120,7 +120,7 @@ impl App {
         &mut self,
         terminal: &mut Terminal<B>,
         rx: mpsc::Receiver<AppEvent>,
-    ) -> std::io::Result<()> {
+    ) -> Result<(), B::Error> {
         while !self.quit {
             terminal.draw(|f| ui::render(f, self))?;
 
@@ -140,6 +140,8 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key: KeyEvent) {
+        use ratatui as ratatui_crossterm;
+
         if self.edit_state == EditState::EditInput {
             match key {
                 key_code_char!('c', Ctrl) => {

@@ -29,7 +29,11 @@ struct Args {
     debug: bool,
 }
 
-fn run<B: Backend>(terminal: &mut Terminal<B>, source: String, debug: bool) -> std::io::Result<()> {
+fn run<B: Backend>(
+    terminal: &mut Terminal<B>,
+    source: String,
+    debug: bool,
+) -> Result<(), B::Error> {
     let speed = Arc::new(RwLock::new(Speed::Normal));
     let (_, rx) = event::new(speed.clone());
     App::new(source, speed, debug).start(terminal, rx)

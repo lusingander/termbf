@@ -2,7 +2,7 @@ use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::Style,
-    widgets::{block::BlockExt, Block, Widget},
+    widgets::{Block, BlockExt, Widget},
 };
 
 const DIVIDER: &str = "│";
@@ -44,7 +44,7 @@ impl<'a> Memory<'a> {
 
 impl Widget for Memory<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        self.block.render(area, buf);
+        self.block.clone().render(area, buf);
         let inner = self.block.inner_if_some(area);
         self.render_memory(inner, buf);
     }
