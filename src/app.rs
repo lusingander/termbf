@@ -1,16 +1,16 @@
 use std::{
-    sync::{mpsc, Arc, RwLock},
+    sync::{Arc, RwLock, mpsc},
     time::Duration,
 };
 
 use itsuki::zero_indexed_enum;
 use laurier::{key_code, key_code_char};
 use ratatui::{
+    Terminal,
     backend::Backend,
     crossterm::event::{Event, KeyCode, KeyEvent},
-    Terminal,
 };
-use tui_input::{backend::crossterm::EventHandler, Input};
+use tui_input::{Input, backend::crossterm::EventHandler};
 
 use crate::{event::AppEvent, interpreter::Interpreter, ui};
 

@@ -12,7 +12,7 @@ use std::{
 
 use app::Speed;
 use clap::Parser;
-use ratatui::{backend::Backend, Terminal};
+use ratatui::{Terminal, backend::Backend};
 
 use crate::app::App;
 
