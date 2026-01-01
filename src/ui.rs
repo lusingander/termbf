@@ -125,7 +125,7 @@ fn render_debug_info(f: &mut Frame, area: Rect, app: &App) {
     }
 }
 
-fn source_text(app: &App) -> Text {
+fn source_text(app: &App) -> Text<'_> {
     let base_style = if app.selected == SelectItem::Source {
         Style::default().fg(DEFAULT_COLOR)
     } else {
@@ -204,7 +204,7 @@ fn output_content(app: &App, area: Rect) -> &str {
     &output[output_start..]
 }
 
-fn build_header(label: &str) -> Paragraph {
+fn build_header(label: &str) -> Paragraph<'_> {
     Paragraph::new(label).centered().block(
         Block::default()
             .borders(Borders::NONE)
@@ -268,7 +268,7 @@ fn build_button<'a>(app: &'a App, label: &'a str, item: SelectItem) -> Paragraph
         )
 }
 
-fn build_speed_select(app: &App, item: SelectItem) -> Paragraph {
+fn build_speed_select(app: &App, item: SelectItem) -> Paragraph<'_> {
     let label = {
         let s = app.speed.read().unwrap();
         match *s {
@@ -313,7 +313,7 @@ fn get_style_base(
     }
 }
 
-fn build_help(app: &App) -> Paragraph {
+fn build_help(app: &App) -> Paragraph<'_> {
     let help = help_msg_str(app);
     Paragraph::new(help)
         .style(Style::default().fg(DISABLED_COLOR))
@@ -379,7 +379,7 @@ fn help_msg_str(app: &App) -> String {
     helps.join(", ")
 }
 
-fn build_debug_info(app: &App) -> Paragraph {
+fn build_debug_info(app: &App) -> Paragraph<'_> {
     let i = &app.interpreter;
     let debug = format!(
         "pos = {:?}, ptr = {:?}, total_step = {:?}, state = {:?}",
