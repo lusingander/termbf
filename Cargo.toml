@@ -1,7 +1,7 @@
 [package]
 name = "termbf"
 version = "0.1.2"
-edition = "2021"
+edition = "2024"
 description = "Terminal Brainf*ck visualizer"
 authors = ["Kyosuke Fujimoto <kyoro.f@gmail.com>"]
 homepage = "https://github.com/lusingander/termbf"
@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 keywords = ["brainfuck", "interpreter", "cli", "tui", "terminal"]
 categories = ["command-line-utilities"]
-rust-version = "1.79.0"
+rust-version = "1.86.0"
 
 exclude = ["/.github", "/img", "/bf"]
 
